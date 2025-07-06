@@ -8,17 +8,17 @@ type Page = 'dashboard' | 'create-safe' | 'transaction' | 'owners';
 
 interface HeaderProps {
   currentPage: Page;
-  selectedWallet: SafeWallet;
+  selectedWallet?: SafeWallet; // Made optional since RainbowKit manages connection
   onNavigate: (page: Page) => void;
-  onSwitchWallet: () => void;
+  onSwitchWallet?: () => void; // Made optional
 }
 
 export function Header({ currentPage, selectedWallet, onNavigate, onSwitchWallet }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const copyAddress = async () => {
-    await navigator.clipboard.writeText(selectedWallet.address);
+  const copyAddress = async (address: string) => {
+    await navigator.clipboard.writeText(address);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -61,46 +61,124 @@ export function Header({ currentPage, selectedWallet, onNavigate, onSwitchWallet
               ))}
             </nav>
 
-            {/* Wallet Selector */}
+            {/* RainbowKit Connect Button with Custom Styling */}
             <div className="hidden sm:flex items-center space-x-3">
-              {/* Selected Wallet Info */}
-              <button
-                onClick={onSwitchWallet}
-                className="flex items-center space-x-3 px-4 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors"
-              >
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
-                    <Shield className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-white text-sm font-medium">{selectedWallet.name}</p>
-                    <p className="text-gray-400 text-xs font-mono">
-                      {selectedWallet.address.slice(0, 6)}...{selectedWallet.address.slice(-4)}
-                    </p>
-                  </div>
-                </div>
-                <ChevronDown className="h-4 w-4 text-gray-400" />
-              </button>
+              <ConnectButton.Custom>
+                {({
+                  account,
+                  chain,
+                  openAccountModal,
+                  openChainModal,
+                  openConnectModal,
+                  authenticationStatus,
+                  mounted,
+                }) => {
+                  const ready = mounted && authenticationStatus !== 'loading';
+                  const connected =
+                    ready &&
+                    account &&
+                    chain &&
+                    (!authenticationStatus || authenticationStatus === 'authenticated');
 
-              {/* Copy Address Button */}
-              <button
-                onClick={copyAddress}
-                className="p-2 hover:bg-white/10 rounded-md transition-colors"
-                title="Copy wallet address"
-              >
-                {copied ? (
-                  <CheckCircle className="h-4 w-4 text-green-400" />
-                ) : (
-                  <Copy className="h-4 w-4 text-gray-400" />
-                )}
-              </button>
-              <ConnectButton />
+                  return (
+                    <div
+                      {...(!ready && {
+                        'aria-hidden': true,
+                        'style': {
+                          opacity: 0,
+                          pointerEvents: 'none',
+                          userSelect: 'none',
+                        },
+                      })}
+                    >
+                      {(() => {
+                        if (!connected) {
+                          return (
+                            <button
+                              onClick={openConnectModal}
+                              className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white font-medium hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-purple-500/20"
+                            >
+                              Connect Wallet
+                            </button>
+                          );
+                        }
 
-              {/* Status Indicator */}
-              <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-green-400 text-sm">Connected</span>
-              </div>
+                        if (chain.unsupported) {
+                          return (
+                            <button
+                              onClick={openChainModal}
+                              className="px-4 py-2 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
+                            >
+                              Wrong network
+                            </button>
+                          );
+                        }
+
+                        return (
+                          <div className="flex items-center space-x-3">
+                            {/* Chain Selector */}
+                            <button
+                              onClick={openChainModal}
+                              className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors"
+                            >
+                              {chain.hasIcon && (
+                                <div className="w-4 h-4 rounded-full overflow-hidden">
+                                  {chain.iconUrl && (
+                                    <img
+                                      alt={chain.name ?? 'Chain icon'}
+                                      src={chain.iconUrl}
+                                      className="w-4 h-4"
+                                    />
+                                  )}
+                                </div>
+                              )}
+                              <span className="text-white text-sm">{chain.name}</span>
+                            </button>
+
+                            {/* Account Button */}
+                            <button
+                              onClick={openAccountModal}
+                              className="flex items-center space-x-3 px-4 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
+                                  <Shield className="h-4 w-4 text-white" />
+                                </div>
+                                <div className="text-left">
+                                  <p className="text-white text-sm font-medium">{account.displayName}</p>
+                                  <p className="text-gray-400 text-xs font-mono">
+                                    {account.address.slice(0, 6)}...{account.address.slice(-4)}
+                                  </p>
+                                </div>
+                              </div>
+                              <ChevronDown className="h-4 w-4 text-gray-400" />
+                            </button>
+
+                            {/* Copy Address Button */}
+                            <button
+                              onClick={() => copyAddress(account.address)}
+                              className="p-2 hover:bg-white/10 rounded-md transition-colors"
+                              title="Copy wallet address"
+                            >
+                              {copied ? (
+                                <CheckCircle className="h-4 w-4 text-green-400" />
+                              ) : (
+                                <Copy className="h-4 w-4 text-gray-400" />
+                              )}
+                            </button>
+
+                            {/* Status Indicator */}
+                            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
+                              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                              <span className="text-green-400 text-sm">Connected</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  );
+                }}
+              </ConnectButton.Custom>
             </div>
 
             {/* Mobile Menu Button */}
@@ -134,26 +212,90 @@ export function Header({ currentPage, selectedWallet, onNavigate, onSwitchWallet
                 </button>
               ))}
               
-              {/* Mobile Wallet Info */}
+              {/* Mobile RainbowKit Connect Button */}
               <div className="mt-4 pt-4 border-t border-white/10">
-                <button
-                  onClick={() => {
-                    onSwitchWallet();
-                    setIsMobileMenuOpen(false);
+                <ConnectButton.Custom>
+                  {({
+                    account,
+                    chain,
+                    openAccountModal,
+                    openChainModal,
+                    openConnectModal,
+                    authenticationStatus,
+                    mounted,
+                  }) => {
+                    const ready = mounted && authenticationStatus !== 'loading';
+                    const connected =
+                      ready &&
+                      account &&
+                      chain &&
+                      (!authenticationStatus || authenticationStatus === 'authenticated');
+
+                    return (
+                      <div
+                        {...(!ready && {
+                          'aria-hidden': true,
+                          'style': {
+                            opacity: 0,
+                            pointerEvents: 'none',
+                            userSelect: 'none',
+                          },
+                        })}
+                      >
+                        {(() => {
+                          if (!connected) {
+                            return (
+                              <button
+                                onClick={() => {
+                                  openConnectModal();
+                                  setIsMobileMenuOpen(false);
+                                }}
+                                className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 text-white font-medium hover:from-purple-600 hover:to-purple-700 transition-all duration-200"
+                              >
+                                Connect Wallet
+                              </button>
+                            );
+                          }
+
+                          if (chain.unsupported) {
+                            return (
+                              <button
+                                onClick={() => {
+                                  openChainModal();
+                                  setIsMobileMenuOpen(false);
+                                }}
+                                className="w-full px-4 py-2 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
+                              >
+                                Wrong network
+                              </button>
+                            );
+                          }
+
+                          return (
+                            <button
+                              onClick={() => {
+                                openAccountModal();
+                                setIsMobileMenuOpen(false);
+                              }}
+                              className="flex items-center space-x-3 w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
+                                <Shield className="h-4 w-4 text-white" />
+                              </div>
+                              <div className="flex-1 text-left">
+                                <p className="text-white text-sm font-medium">{account.displayName}</p>
+                                <p className="text-gray-400 text-xs font-mono">
+                                  {account.address.slice(0, 6)}...{account.address.slice(-4)}
+                                </p>
+                              </div>
+                              <ChevronDown className="h-4 w-4 text-gray-400" />
+                            </button>
+                          );
+                        })()}
+                      </div>
+                    );
                   }}
-                  className="flex items-center space-x-3 w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
-                    <Shield className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-white text-sm font-medium">{selectedWallet.name}</p>
-                    <p className="text-gray-400 text-xs font-mono">
-                      {selectedWallet.address.slice(0, 6)}...{selectedWallet.address.slice(-4)}
-                    </p>
-                  </div>
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
-                </button>
+                </ConnectButton.Custom>
               </div>
             </div>
           </div>
