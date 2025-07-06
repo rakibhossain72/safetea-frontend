@@ -1,23 +1,23 @@
-import React, { useState } from 'react';
-import { Plus, Trash2, ArrowLeft, Shield } from 'lucide-react';
-import { GlassCard } from './ui/GlassCard';
-import { Button } from './ui/Button';
-import { Input } from './ui/Input';
-import { SafeWallet } from '../App';
+import React, { useState } from "react";
+import { Plus, Trash2, ArrowLeft, Shield } from "lucide-react";
+import { GlassCard } from "./ui/GlassCard";
+import { Button } from "./ui/Button";
+import { Input } from "./ui/Input";
+import { SafeWallet } from "../App";
 
 interface CreateSafeProps {
   onBack: () => void;
-  onSafeCreated: (safe: Omit<SafeWallet, 'id'>) => void;
+  onSafeCreated: (safe: Omit<SafeWallet, "id">) => void;
 }
 
 export function CreateSafe({ onBack, onSafeCreated }: CreateSafeProps) {
-  const [safeName, setSafeName] = useState('');
-  const [owners, setOwners] = useState<string[]>(['']);
+  const [safeName, setSafeName] = useState("");
+  const [owners, setOwners] = useState<string[]>([""]);
   const [threshold, setThreshold] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
 
   const addOwner = () => {
-    setOwners([...owners, '']);
+    setOwners([...owners, ""]);
   };
 
   const removeOwner = (index: number) => {
@@ -37,28 +37,32 @@ export function CreateSafe({ onBack, onSafeCreated }: CreateSafeProps) {
 
   const handleCreateSafe = async () => {
     setIsCreating(true);
-    
+
     // Simulate transaction creation
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const newSafe: Omit<SafeWallet, 'id'> = {
-      name: safeName || 'New Safe',
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const newSafe: Omit<SafeWallet, "id"> = {
+      name: safeName || "New Safe",
       address: `0x${Math.random().toString(16).substr(2, 40)}`,
       owners: validOwners,
       threshold,
-      ethBalance: '0.0000',
+      ethBalance: "0.0000",
       totalTransactions: 0,
       pendingTransactions: 0,
-      createdDate: new Date().toISOString().split('T')[0],
-      isActive: true
+      createdDate: new Date().toISOString().split("T")[0],
+      isActive: true,
     };
-    
+
     setIsCreating(false);
     onSafeCreated(newSafe);
   };
 
-  const validOwners = owners.filter(owner => owner.trim() !== '');
-  const canCreate = safeName.trim() !== '' && validOwners.length >= 1 && threshold > 0 && threshold <= validOwners.length;
+  const validOwners = owners.filter((owner) => owner.trim() !== "");
+  const canCreate =
+    safeName.trim() !== "" &&
+    validOwners.length >= 1 &&
+    threshold > 0 &&
+    threshold <= validOwners.length;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -71,9 +75,11 @@ export function CreateSafe({ onBack, onSafeCreated }: CreateSafeProps) {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Wallet Selection
         </Button>
-        
+
         <h1 className="text-3xl font-light text-white mb-2">Create New Safe</h1>
-        <p className="text-gray-400">Set up a new multi-signature wallet with your team</p>
+        <p className="text-gray-400">
+          Set up a new multi-signature wallet with your team
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -101,11 +107,7 @@ export function CreateSafe({ onBack, onSafeCreated }: CreateSafeProps) {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-light text-white">Safe Owners</h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={addOwner}
-                  >
+                  <Button variant="outline" size="sm" onClick={addOwner}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Owner
                   </Button>
@@ -136,33 +138,35 @@ export function CreateSafe({ onBack, onSafeCreated }: CreateSafeProps) {
                 </div>
 
                 <p className="text-gray-400 text-sm mt-2">
-                  Add the addresses of all Safe owners. Each owner can submit and confirm transactions.
+                  Add the addresses of all Safe owners. Each owner can submit
+                  and confirm transactions.
                 </p>
               </div>
 
               {/* Threshold Section */}
               <div>
-                <h2 className="text-xl font-light text-white mb-4">Confirmation Threshold</h2>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <span className="text-gray-400 min-w-0">Require</span>
-                    <select
-                      value={threshold}
-                      onChange={(e) => setThreshold(Number(e.target.value))}
-                      className="px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    >
-                      {Array.from({ length: Math.max(1, validOwners.length) }, (_, i) => i + 1).map(num => (
-                        <option key={num} value={num} className="bg-gray-800">
-                          {num}
-                        </option>
-                      ))}
-                    </select>
-                    <span className="text-gray-400">out of {validOwners.length} owner(s)</span>
+                <h2 className="text-xl font-light text-white mb-5">
+                  Confirmation Threshold
+                </h2>
+
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-400 font-medium">Require</span>
+                    <span className="text-white font-semibold">
+                      51% of owners
+                    </span>
+                    <span className="text-gray-400">
+                      to confirm (out of {validOwners.length} owner
+                      {validOwners.length !== 1 ? "s" : ""})
+                    </span>
                   </div>
 
-                  <p className="text-gray-400 text-sm">
-                    Choose how many owners must confirm a transaction before it can be executed.
+                  <p className="text-gray-400 text-sm max-w-md">
+                    Transactions need confirmation from a{" "}
+                    <span className="text-white font-semibold">
+                      majority of owners
+                    </span>{" "}
+                    before they can be executed.
                   </p>
                 </div>
               </div>
@@ -195,11 +199,11 @@ export function CreateSafe({ onBack, onSafeCreated }: CreateSafeProps) {
         <div>
           <GlassCard className="p-6 sticky top-8">
             <h3 className="text-lg font-light text-white mb-4">Summary</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <p className="text-gray-400 text-sm mb-1">Safe Name</p>
-                <p className="text-white">{safeName || 'Unnamed Safe'}</p>
+                <p className="text-white">{safeName || "Unnamed Safe"}</p>
               </div>
 
               <div>
@@ -209,7 +213,9 @@ export function CreateSafe({ onBack, onSafeCreated }: CreateSafeProps) {
 
               <div>
                 <p className="text-gray-400 text-sm mb-1">Threshold</p>
-                <p className="text-white">{threshold} of {validOwners.length}</p>
+                <p className="text-white">
+                  {threshold} of {validOwners.length}
+                </p>
               </div>
 
               <div>
@@ -225,7 +231,8 @@ export function CreateSafe({ onBack, onSafeCreated }: CreateSafeProps) {
 
             <div className="mt-6 p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
               <p className="text-purple-400 text-sm">
-                💡 Your Safe will be deployed on-chain once you confirm the transaction in your wallet.
+                💡 Your Safe will be deployed on-chain once you confirm the
+                transaction in your wallet.
               </p>
             </div>
           </GlassCard>
