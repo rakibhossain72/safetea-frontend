@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Shield, Plus, Users, Clock, CheckCircle, Copy, ArrowRight, Search, Filter } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
@@ -8,12 +9,21 @@ import { SafeWallet } from '../App';
 interface WalletSelectionProps {
   wallets: SafeWallet[];
   onSelectWallet: (wallet: SafeWallet) => void;
-  onCreateNew: () => void;
 }
 
-export function WalletSelection({ wallets, onSelectWallet, onCreateNew }: WalletSelectionProps) {
+export function WalletSelection({ wallets, onSelectWallet }: WalletSelectionProps) {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'active' | 'inactive'>('all');
+
+  const handleSelectWallet = (wallet: SafeWallet) => {
+    onSelectWallet(wallet);
+    navigate('/dashboard');
+  };
+
+  const handleCreateNew = () => {
+    navigate('/create-safe');
+  };
 
   const filteredWallets = wallets.filter(wallet => {
     const matchesSearch = wallet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -105,7 +115,7 @@ export function WalletSelection({ wallets, onSelectWallet, onCreateNew }: Wallet
                   />
                 </div>
                 <Button
-                  onClick={onCreateNew}
+                  onClick={handleCreateNew}
                   className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
                 >
                   <Plus className="h-4 w-4 mr-2" />
@@ -122,7 +132,7 @@ export function WalletSelection({ wallets, onSelectWallet, onCreateNew }: Wallet
             <GlassCard
               key={wallet.id}
               className="p-6 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group"
-              onClick={() => onSelectWallet(wallet)}
+              onClick={() => handleSelectWallet(wallet)}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3">
@@ -200,7 +210,7 @@ export function WalletSelection({ wallets, onSelectWallet, onCreateNew }: Wallet
                 className="w-full group-hover:bg-purple-500/10 group-hover:border-purple-500/30 group-hover:text-purple-400"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onSelectWallet(wallet);
+                  handleSelectWallet(wallet);
                 }}
               >
                 Select Wallet
@@ -217,7 +227,7 @@ export function WalletSelection({ wallets, onSelectWallet, onCreateNew }: Wallet
           {/* Create New Wallet Card */}
           <GlassCard
             className="p-6 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group border-dashed border-white/20"
-            onClick={onCreateNew}
+            onClick={handleCreateNew}
           >
             <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center">
               <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-purple-500/20 to-purple-600/20 border border-purple-500/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -233,7 +243,7 @@ export function WalletSelection({ wallets, onSelectWallet, onCreateNew }: Wallet
               </p>
 
               <Button
-                onClick={onCreateNew}
+                onClick={handleCreateNew}
                 variant="outline"
                 className="group-hover:bg-purple-500/10 group-hover:border-purple-500/30 group-hover:text-purple-400"
               >

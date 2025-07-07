@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, ChevronDown, Coins, ArrowRight } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
@@ -7,11 +8,11 @@ import { Token, TransactionData } from '../App';
 
 interface SubmitTransactionPageProps {
   tokens: Token[];
-  onBack: () => void;
   onSubmit: (transaction: TransactionData) => void;
 }
 
-export function SubmitTransactionPage({ tokens, onBack, onSubmit }: SubmitTransactionPageProps) {
+export function SubmitTransactionPage({ tokens, onSubmit }: SubmitTransactionPageProps) {
+  const navigate = useNavigate();
   const [transactionType, setTransactionType] = useState<'legacy' | 'token'>('legacy');
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
@@ -36,6 +37,7 @@ export function SubmitTransactionPage({ tokens, onBack, onSubmit }: SubmitTransa
 
     setIsSubmitting(false);
     onSubmit(transactionData);
+    navigate('/confirm-transaction');
   };
 
   const ethBalance = '12.4567';
@@ -46,7 +48,7 @@ export function SubmitTransactionPage({ tokens, onBack, onSubmit }: SubmitTransa
       <div className="mb-8">
         <Button
           variant="ghost"
-          onClick={onBack}
+          onClick={() => navigate('/dashboard')}
           className="mb-4 text-gray-400 hover:text-white"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />

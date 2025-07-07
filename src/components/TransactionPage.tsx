@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Copy, CheckCircle, Clock, XCircle, ExternalLink } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
 
-interface TransactionPageProps {
-  transactionId: string | null;
-  onBack: () => void;
-}
-
-export function TransactionPage({ transactionId, onBack }: TransactionPageProps) {
+export function TransactionPage() {
+  const navigate = useNavigate();
+  const { txId } = useParams<{ txId: string }>();
   const [isConfirming, setIsConfirming] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
 
   // Mock transaction data
   const transaction = {
-    id: transactionId || '1',
+    id: txId || '1',
     to: '0x742d35Cc6834C532532c5C4b95929742c395c9f1',
     value: '2.5 ETH',
     data: '0x',
@@ -53,7 +51,7 @@ export function TransactionPage({ transactionId, onBack }: TransactionPageProps)
       <div className="mb-8">
         <Button
           variant="ghost"
-          onClick={onBack}
+          onClick={() => navigate('/dashboard')}
           className="mb-4 text-gray-400 hover:text-white"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />

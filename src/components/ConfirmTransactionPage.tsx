@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, AlertTriangle, CheckCircle, Clock, Shield } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
@@ -6,11 +7,11 @@ import { TransactionData } from '../App';
 
 interface ConfirmTransactionPageProps {
   transaction: TransactionData;
-  onBack: () => void;
   onConfirm: () => void;
 }
 
-export function ConfirmTransactionPage({ transaction, onBack, onConfirm }: ConfirmTransactionPageProps) {
+export function ConfirmTransactionPage({ transaction, onConfirm }: ConfirmTransactionPageProps) {
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleConfirm = async () => {
@@ -21,6 +22,7 @@ export function ConfirmTransactionPage({ transaction, onBack, onConfirm }: Confi
     
     setIsSubmitting(false);
     onConfirm();
+    navigate('/dashboard');
   };
 
   const getTransactionTypeInfo = () => {
@@ -50,7 +52,7 @@ export function ConfirmTransactionPage({ transaction, onBack, onConfirm }: Confi
       <div className="mb-8">
         <Button
           variant="ghost"
-          onClick={onBack}
+          onClick={() => navigate('/submit-transaction')}
           className="mb-4 text-gray-400 hover:text-white"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -280,7 +282,7 @@ export function ConfirmTransactionPage({ transaction, onBack, onConfirm }: Confi
 
               <Button
                 variant="outline"
-                onClick={onBack}
+                onClick={() => navigate('/submit-transaction')}
                 disabled={isSubmitting}
                 className="w-full"
               >

@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Crown,
@@ -13,15 +14,13 @@ import { SafeWallet } from "../App";
 
 interface OwnerManagementProps {
   wallet: SafeWallet;
-  onBack: () => void;
-  onAddOwner: () => void;
 }
 
 export function OwnerManagement({
   wallet,
-  onBack,
-  onAddOwner,
 }: OwnerManagementProps) {
+  const navigate = useNavigate();
+
   const owners = [
     {
       address: wallet.owners[0] || "0x8ba1f109551bD432803012645Hac136c82067433",
@@ -49,7 +48,7 @@ export function OwnerManagement({
       <div className="mb-8">
         <Button
           variant="ghost"
-          onClick={onBack}
+          onClick={() => navigate('/dashboard')}
           className="mb-4 text-gray-400 hover:text-white"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -101,7 +100,7 @@ export function OwnerManagement({
                 variant="outline"
                 size="sm"
                 className="w-full"
-                onClick={onAddOwner}
+               onClick={() => navigate('/add-owner')}
               >
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add Owner
@@ -192,7 +191,7 @@ export function OwnerManagement({
                     Invite a new owner to join this Safe
                   </p>
                 </div>
-                <Button variant="outline" onClick={onAddOwner}>
+                <Button variant="outline" onClick={() => navigate('/add-owner')}>
                   <UserPlus className="h-4 w-4 mr-2" />
                   Add Owner
                 </Button>

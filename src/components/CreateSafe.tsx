@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, Trash2, ArrowLeft, Shield } from "lucide-react";
 import { GlassCard } from "./ui/GlassCard";
 import { Button } from "./ui/Button";
@@ -6,11 +7,11 @@ import { Input } from "./ui/Input";
 import { SafeWallet } from "../App";
 
 interface CreateSafeProps {
-  onBack: () => void;
   onSafeCreated: (safe: Omit<SafeWallet, "id">) => void;
 }
 
-export function CreateSafe({ onBack, onSafeCreated }: CreateSafeProps) {
+export function CreateSafe({ onSafeCreated }: CreateSafeProps) {
+  const navigate = useNavigate();
   const [safeName, setSafeName] = useState("");
   const [owners, setOwners] = useState<string[]>([""]);
   const [threshold, setThreshold] = useState(1);
@@ -55,6 +56,7 @@ export function CreateSafe({ onBack, onSafeCreated }: CreateSafeProps) {
 
     setIsCreating(false);
     onSafeCreated(newSafe);
+    navigate('/dashboard');
   };
 
   const validOwners = owners.filter((owner) => owner.trim() !== "");
@@ -69,7 +71,7 @@ export function CreateSafe({ onBack, onSafeCreated }: CreateSafeProps) {
       <div className="mb-8">
         <Button
           variant="ghost"
-          onClick={onBack}
+          onClick={() => navigate('/wallets')}
           className="mb-4 text-gray-400 hover:text-white"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Plus, AlertTriangle, CheckCircle, Coins } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
@@ -6,11 +7,11 @@ import { Input } from './ui/Input';
 import { Token } from '../App';
 
 interface ImportTokenPageProps {
-  onBack: () => void;
   onImport: (token: Token) => void;
 }
 
-export function ImportTokenPage({ onBack, onImport }: ImportTokenPageProps) {
+export function ImportTokenPage({ onImport }: ImportTokenPageProps) {
+  const navigate = useNavigate();
   const [contractAddress, setContractAddress] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [tokenData, setTokenData] = useState<Token | null>(null);
@@ -51,6 +52,7 @@ export function ImportTokenPage({ onBack, onImport }: ImportTokenPageProps) {
   const handleImport = () => {
     if (tokenData) {
       onImport(tokenData);
+      navigate('/dashboard');
     }
   };
 
@@ -86,7 +88,7 @@ export function ImportTokenPage({ onBack, onImport }: ImportTokenPageProps) {
       <div className="mb-8">
         <Button
           variant="ghost"
-          onClick={onBack}
+         onClick={() => navigate('/dashboard')}
           className="mb-4 text-gray-400 hover:text-white"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />

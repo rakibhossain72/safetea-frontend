@@ -1,13 +1,16 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Shield, Users, Lock, Zap, ArrowRight, CheckCircle } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
 
-interface LandingPageProps {
-  onConnect: () => void;
-}
+export function LandingPage() {
+  const navigate = useNavigate();
 
-export function LandingPage({ onConnect }: LandingPageProps) {
+  const handleGetStarted = () => {
+    navigate('/wallets');
+  };
+
   const features = [
     {
       icon: Shield,
@@ -61,11 +64,11 @@ export function LandingPage({ onConnect }: LandingPageProps) {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <Button
-                onClick={onConnect}
+                onClick={handleGetStarted}
                 size="lg"
                 className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 px-8 py-4 text-lg"
               >
-                Connect Wallet
+                Get Started
                 <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
               
@@ -205,7 +208,7 @@ export function LandingPage({ onConnect }: LandingPageProps) {
               Join thousands of teams and organizations who trust SafeTea to protect their digital assets.
             </p>
             <Button
-              onClick={onConnect}
+              onClick={handleGetStarted}
               size="lg"
               className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 px-8 py-4 text-lg"
             >

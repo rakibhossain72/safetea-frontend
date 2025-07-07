@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Header } from './components/Header';
 import { LandingPage } from './components/LandingPage';
 import { Dashboard } from './components/Dashboard';
@@ -12,6 +12,7 @@ import { SubmitTransactionPage } from './components/SubmitTransactionPage';
 import { AddOwnerPage } from './components/AddOwnerPage';
 import { ImportTokenPage } from './components/ImportTokenPage';
 import { ConfirmTransactionPage } from './components/ConfirmTransactionPage';
+import { useAccount } from 'wagmi';
 
 export interface Token {
   address: string;
@@ -44,10 +45,8 @@ export interface SafeWallet {
 }
 
 function App() {
-  const navigate = useNavigate();
-  const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
+  const { isConnected } = useAccount();
   const [pendingTransaction, setPendingTransaction] = useState<TransactionData | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<SafeWallet | null>(null);
 
   const [wallets, setWallets] = useState<SafeWallet[]>([
@@ -116,153 +115,161 @@ function App() {
     }
   ]);
 
-  const handleConnect = () => {
-    setIsConnected(true);
-    navigate('/wallet-selection');
-  };
-
   const handleWalletSelect = (wallet: SafeWallet) => {
     setSelectedWallet(wallet);
     setWallets(prev => prev.map(w => ({ ...w, isActive: w.id === wallet.id })));
-    navigate('/dashboard');
   };
-
-  const handleCreateNewSafe = () => navigate('/create-safe');
 
   const handleSafeCreated = (newSafe: Omit<SafeWallet, 'id'>) => {
     const safe: SafeWallet = { ...newSafe, id: Date.now().toString() };
     setWallets(prev => [...prev, safe]);
     setSelectedWallet(safe);
-    navigate('/dashboard');
   };
 
   const handleSubmitTransaction = (transactionData: TransactionData) => {
     setPendingTransaction(transactionData);
-    navigate('/confirm-transaction');
   };
 
   const handleConfirmTransaction = () => {
     setPendingTransaction(null);
-    navigate('/dashboard');
   };
 
   const handleAddToken = (token: Token) => {
     setTokens(prev => [...prev, token]);
-    navigate('/dashboard');
   };
 
-  const handleAddOwner = () => {
-    navigate('/dashboard');
+  // Protected route wrapper
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    if (!isConnected) {
+      return <Navigate to="/" replace />;
+    }
+    return <>{children}</>;
+  };
+
+  // Wallet required route wrapper
+  const WalletRequiredRoute = ({ children }: { children: React.ReactNode }) => {
+    if (!isConnected) {
+      return <Navigate to="/" replace />;
+    }
+    if (!selectedWallet) {
+      return <Navigate to="/wallets" replace />;
+    }
+    return <>{children}</>;
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800">
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent pointer-events-none" />
 
-      {isConnected && selectedWallet && (
-        <Header
-          currentPage=""
-          selectedWallet={selectedWallet}
-          onNavigate={() => {}} // optional to remove or implement
-          onSwitchWallet={() => navigate('/wallet-selection')}
-        />
-      )}
+      {/* Show header only when connected and not on landing page */}
+      <Routes>
+        <Route path="/" element={null} />
+        <Route path="*" element={
+          isConnected ? (
+            <Header
+              currentPage=""
+              selectedWallet={selectedWallet}
+              onNavigate={() => {}}
+              onSwitchWallet={() => {}}
+            />
+          ) : null
+        } />
+      </Routes>
 
       <main className="relative z-10">
         <Routes>
-          <Route path="/" element={<LandingPage onConnect={handleConnect} />} />
-          <Route path="/wallet-selection" element={
-            <WalletSelection
-              wallets={wallets}
-              onSelectWallet={handleWalletSelect}
-              onCreateNew={handleCreateNewSafe}
-            />
-          } />
-          <Route path="/dashboard" element={
-            isConnected && selectedWallet ? (
-              <Dashboard
-                wallet={selectedWallet}
-                tokens={tokens}
-                onSubmitTransaction={() => navigate('/submit-transaction')}
-                onViewOwners={() => navigate('/owners')}
-                onViewTransaction={(id) => {
-                  setSelectedTransaction(id);
-                  navigate(`/transaction/${id}`);
-                }}
-                onViewAllTransactions={() => navigate('/all-transactions')}
-                onImportToken={() => navigate('/import-token')}
-                onSwitchWallet={() => navigate('/wallet-selection')}
+          {/* Landing Page */}
+          <Route path="/" element={<LandingPage />} />
+          
+          {/* Wallet Selection */}
+          <Route path="/wallets" element={
+            <ProtectedRoute>
+              <WalletSelection
+                wallets={wallets}
+                onSelectWallet={handleWalletSelect}
               />
-            ) : (
-              <Navigate to="/" />
-            )
+            </ProtectedRoute>
           } />
+          
+          {/* Create Safe */}
           <Route path="/create-safe" element={
-            <CreateSafe
-              onBack={() => navigate('/wallet-selection')}
-              onSafeCreated={handleSafeCreated}
-            />
+            <ProtectedRoute>
+              <CreateSafe onSafeCreated={handleSafeCreated} />
+            </ProtectedRoute>
           } />
-          <Route path="/transaction/:txId" element={
-            <TransactionPage
-              transactionId={selectedTransaction}
-              onBack={() => navigate('/dashboard')}
-            />
-          } />
-          <Route path="/all-transactions" element={
-            <AllTransactionsPage
-              onBack={() => navigate('/dashboard')}
-              onViewTransaction={(id) => {
-                setSelectedTransaction(id);
-                navigate(`/transaction/${id}`);
-              }}
-            />
-          } />
-          <Route path="/owners" element={
-            selectedWallet ? (
-              <OwnerManagement
-                wallet={selectedWallet}
-                onBack={() => navigate('/dashboard')}
-                onAddOwner={() => navigate('/add-owner')}
+          
+          {/* Dashboard */}
+          <Route path="/dashboard" element={
+            <WalletRequiredRoute>
+              <Dashboard
+                wallet={selectedWallet!}
+                tokens={tokens}
               />
-            ) : (
-              <Navigate to="/" />
-            )
+            </WalletRequiredRoute>
           } />
+          
+          {/* Submit Transaction */}
           <Route path="/submit-transaction" element={
-            <SubmitTransactionPage
-              tokens={tokens}
-              onBack={() => navigate('/dashboard')}
-              onSubmit={handleSubmitTransaction}
-            />
-          } />
-          <Route path="/add-owner" element={
-            selectedWallet ? (
-              <AddOwnerPage
-                wallet={selectedWallet}
-                onBack={() => navigate('/owners')}
-                onSubmit={handleAddOwner}
+            <WalletRequiredRoute>
+              <SubmitTransactionPage
+                tokens={tokens}
+                onSubmit={handleSubmitTransaction}
               />
-            ) : (
-              <Navigate to="/" />
-            )
+            </WalletRequiredRoute>
           } />
-          <Route path="/import-token" element={
-            <ImportTokenPage
-              onBack={() => navigate('/dashboard')}
-              onImport={handleAddToken}
-            />
-          } />
+          
+          {/* Confirm Transaction */}
           <Route path="/confirm-transaction" element={
             pendingTransaction ? (
-              <ConfirmTransactionPage
-                transaction={pendingTransaction}
-                onBack={() => navigate('/submit-transaction')}
-                onConfirm={handleConfirmTransaction}
-              />
+              <WalletRequiredRoute>
+                <ConfirmTransactionPage
+                  transaction={pendingTransaction}
+                  onConfirm={handleConfirmTransaction}
+                />
+              </WalletRequiredRoute>
             ) : (
-              <Navigate to="/dashboard" />
+              <Navigate to="/dashboard" replace />
             )
+          } />
+          
+          {/* Transaction Details */}
+          <Route path="/transaction/:txId" element={
+            <WalletRequiredRoute>
+              <TransactionPage />
+            </WalletRequiredRoute>
+          } />
+          
+          {/* All Transactions */}
+          <Route path="/transactions" element={
+            <WalletRequiredRoute>
+              <AllTransactionsPage />
+            </WalletRequiredRoute>
+          } />
+          
+          {/* Owner Management */}
+          <Route path="/owners" element={
+            <WalletRequiredRoute>
+              <OwnerManagement wallet={selectedWallet!} />
+            </WalletRequiredRoute>
+          } />
+          
+          {/* Add Owner */}
+          <Route path="/add-owner" element={
+            <WalletRequiredRoute>
+              <AddOwnerPage wallet={selectedWallet!} />
+            </WalletRequiredRoute>
+          } />
+          
+          {/* Import Token */}
+          <Route path="/import-token" element={
+            <WalletRequiredRoute>
+              <ImportTokenPage onImport={handleAddToken} />
+            </WalletRequiredRoute>
+          } />
+          
+          {/* Catch all - redirect to appropriate page */}
+          <Route path="*" element={
+            <Navigate to={isConnected ? (selectedWallet ? "/dashboard" : "/wallets") : "/"} replace />
           } />
         </Routes>
       </main>

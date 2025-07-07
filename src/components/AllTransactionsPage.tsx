@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, CheckCircle, XCircle, Filter, Search, Eye } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 
-interface AllTransactionsPageProps {
-  onBack: () => void;
-  onViewTransaction: (txId: string) => void;
-}
-
-export function AllTransactionsPage({ onBack, onViewTransaction }: AllTransactionsPageProps) {
+export function AllTransactionsPage() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -128,7 +125,7 @@ export function AllTransactionsPage({ onBack, onViewTransaction }: AllTransactio
       <div className="mb-8">
         <Button
           variant="ghost"
-          onClick={onBack}
+          onClick={() => navigate('/dashboard')}
           className="mb-4 text-gray-400 hover:text-white"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -185,7 +182,7 @@ export function AllTransactionsPage({ onBack, onViewTransaction }: AllTransactio
             filteredTransactions.map((tx) => (
               <div
                 key={tx.id}
-                onClick={() => onViewTransaction(tx.id)}
+                onClick={() => navigate(`/transaction/${tx.id}`)}
                 className="flex items-center justify-between p-6 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
               >
                 <div className="flex items-center space-x-4 flex-1">

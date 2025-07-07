@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, UserPlus, AlertTriangle, Users } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
@@ -7,11 +8,10 @@ import { SafeWallet } from '../App';
 
 interface AddOwnerPageProps {
   wallet: SafeWallet;
-  onBack: () => void;
-  onSubmit: () => void;
 }
 
-export function AddOwnerPage({ wallet, onBack, onSubmit }: AddOwnerPageProps) {
+export function AddOwnerPage({ wallet }: AddOwnerPageProps) {
+  const navigate = useNavigate();
   const [ownerAddress, setOwnerAddress] = useState('');
   const [threshold, setThreshold] = useState(wallet.threshold);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,7 +26,7 @@ export function AddOwnerPage({ wallet, onBack, onSubmit }: AddOwnerPageProps) {
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     setIsSubmitting(false);
-    onSubmit();
+    navigate('/owners');
   };
 
   const isValidAddress = ownerAddress.length === 42 && ownerAddress.startsWith('0x');
@@ -36,7 +36,7 @@ export function AddOwnerPage({ wallet, onBack, onSubmit }: AddOwnerPageProps) {
       <div className="mb-8">
         <Button
           variant="ghost"
-          onClick={onBack}
+          onClick={() => navigate('/owners')}
           className="mb-4 text-gray-400 hover:text-white"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />

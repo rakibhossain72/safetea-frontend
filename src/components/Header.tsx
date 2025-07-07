@@ -1,19 +1,21 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Shield, Menu, Copy, CheckCircle, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { SafeWallet } from '../App';
 
-type Page = 'dashboard' | 'create-safe' | 'transaction' | 'owners';
 
 interface HeaderProps {
-  currentPage: Page;
+  currentPage: string;
   selectedWallet?: SafeWallet; // Made optional since RainbowKit manages connection
-  onNavigate: (page: Page) => void;
+  onNavigate: () => void;
   onSwitchWallet?: () => void; // Made optional
 }
 
-export function Header({ currentPage, selectedWallet, onNavigate, onSwitchWallet }: HeaderProps) {
+export function Header({ selectedWallet }: HeaderProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -24,8 +26,9 @@ export function Header({ currentPage, selectedWallet, onNavigate, onSwitchWallet
   };
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'create-safe', label: 'Create Safe' },
+    { id: '/dashboard', label: 'Dashboard', path: '/dashboard' },
+    { id: '/create-safe', label: 'Create Safe', path: '/create-safe' },
+    { id: '/wallets', label: 'My Wallets', path: '/wallets' },
   ] as const;
 
   return (
@@ -49,9 +52,9 @@ export function Header({ currentPage, selectedWallet, onNavigate, onSwitchWallet
               {navItems.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => onNavigate(item.id)}
+                  onClick={() => navigate(item.path)}
                   className={`px-3 py-2 text-sm font-light transition-colors duration-200 ${
-                    currentPage === item.id
+                    location.pathname === item.path
                       ? 'text-purple-400 border-b border-purple-400'
                       : 'text-gray-300 hover:text-white'
                   }`}
@@ -199,11 +202,11 @@ export function Header({ currentPage, selectedWallet, onNavigate, onSwitchWallet
                 <button
                   key={item.id}
                   onClick={() => {
-                    onNavigate(item.id);
+                    navigate(item.path);
                     setIsMobileMenuOpen(false);
                   }}
                   className={`block w-full text-left px-3 py-2 text-sm font-light transition-colors ${
-                    currentPage === item.id
+                    location.pathname === item.path
                       ? 'text-purple-400'
                       : 'text-gray-300 hover:text-white'
                   }`}
