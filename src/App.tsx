@@ -9,11 +9,10 @@ import { OwnerManagement } from './components/OwnerManagement';
 import { WalletSelection } from './components/WalletSelection';
 import { SubmitTransactionPage } from './components/SubmitTransactionPage';
 import { AddOwnerPage } from './components/AddOwnerPage';
-import { ChangeThresholdPage } from './components/ChangeThresholdPage';
 import { ImportTokenPage } from './components/ImportTokenPage';
 import { ConfirmTransactionPage } from './components/ConfirmTransactionPage';
 
-type Page = 'landing' | 'wallet-selection' | 'dashboard' | 'create-safe' | 'transaction' | 'all-transactions' | 'owners' | 'submit-transaction' | 'add-owner' | 'change-threshold' | 'import-token' | 'confirm-transaction';
+type Page = 'landing' | 'wallet-selection' | 'dashboard' | 'create-safe' | 'transaction' | 'all-transactions' | 'owners' | 'submit-transaction' | 'add-owner' | 'import-token' | 'confirm-transaction';
 
 export interface Token {
   address: string;
@@ -172,10 +171,6 @@ function App() {
     // Handle add owner logic
   };
 
-  const handleChangeThreshold = () => {
-    setCurrentPage('dashboard');
-    // Handle threshold change logic
-  };
 
   const renderCurrentPage = () => {
     if (!isConnected && currentPage !== 'landing') {
@@ -233,7 +228,6 @@ function App() {
             wallet={selectedWallet}
             onBack={() => setCurrentPage('dashboard')}
             onAddOwner={() => setCurrentPage('add-owner')}
-            onChangeThreshold={() => setCurrentPage('change-threshold')}
           />
         ) : null;
       case 'submit-transaction':
@@ -250,14 +244,6 @@ function App() {
             wallet={selectedWallet}
             onBack={() => setCurrentPage('owners')}
             onSubmit={handleAddOwner}
-          />
-        ) : null;
-      case 'change-threshold':
-        return selectedWallet ? (
-          <ChangeThresholdPage
-            wallet={selectedWallet}
-            onBack={() => setCurrentPage('owners')}
-            onSubmit={handleChangeThreshold}
           />
         ) : null;
       case 'import-token':

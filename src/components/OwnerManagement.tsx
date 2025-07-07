@@ -1,23 +1,34 @@
-import React from 'react';
-import { ArrowLeft, Crown, Shield, Copy, MoreVertical, UserPlus, Settings } from 'lucide-react';
-import { GlassCard } from './ui/GlassCard';
-import { Button } from './ui/Button';
-import { SafeWallet } from '../App';
+import React from "react";
+import {
+  ArrowLeft,
+  Crown,
+  Shield,
+  Copy,
+  MoreVertical,
+  UserPlus,
+} from "lucide-react";
+import { GlassCard } from "./ui/GlassCard";
+import { Button } from "./ui/Button";
+import { SafeWallet } from "../App";
 
 interface OwnerManagementProps {
   wallet: SafeWallet;
   onBack: () => void;
   onAddOwner: () => void;
-  onChangeThreshold: () => void;
 }
 
-export function OwnerManagement({ wallet, onBack, onAddOwner, onChangeThreshold }: OwnerManagementProps) {
+export function OwnerManagement({
+  wallet,
+  onBack,
+  onAddOwner,
+}: OwnerManagementProps) {
   const owners = [
     {
-      address: wallet.owners[0] || '0x8ba1f109551bD432803012645Hac136c82067433',
+      address: wallet.owners[0] || "0x8ba1f109551bD432803012645Hac136c82067433",
       isCreator: true,
-      name: 'Alice (You)',
-      avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
+      name: "Alice (You)",
+      avatar:
+        "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400",
       joinedDate: wallet.createdDate,
       transactionsSigned: 45,
     },
@@ -25,10 +36,12 @@ export function OwnerManagement({ wallet, onBack, onAddOwner, onChangeThreshold 
       address,
       isCreator: false,
       name: `Owner ${index + 2}`,
-      avatar: `https://images.pexels.com/photos/${1043471 + index}/pexels-photo-${1043471 + index}.jpeg?auto=compress&cs=tinysrgb&w=400`,
+      avatar: `https://images.pexels.com/photos/${
+        1043471 + index
+      }/pexels-photo-${1043471 + index}.jpeg?auto=compress&cs=tinysrgb&w=400`,
       joinedDate: wallet.createdDate,
       transactionsSigned: Math.floor(Math.random() * 30) + 10,
-    }))
+    })),
   ];
 
   return (
@@ -42,17 +55,23 @@ export function OwnerManagement({ wallet, onBack, onAddOwner, onChangeThreshold 
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
         </Button>
-        
-        <h1 className="text-3xl font-light text-white mb-2">Owner Management</h1>
-        <p className="text-gray-400">Manage the owners and settings of {wallet.name}</p>
+
+        <h1 className="text-3xl font-light text-white mb-2">
+          Owner Management
+        </h1>
+        <p className="text-gray-400">
+          Manage the owners and settings of {wallet.name}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Safe Stats */}
         <div className="lg:col-span-1">
           <GlassCard className="p-6 sticky top-8">
-            <h3 className="text-lg font-light text-white mb-4">Safe Information</h3>
-            
+            <h3 className="text-lg font-light text-white mb-4">
+              Safe Information
+            </h3>
+
             <div className="space-y-4">
               <div>
                 <p className="text-gray-400 text-sm mb-1">Safe Name</p>
@@ -65,39 +84,27 @@ export function OwnerManagement({ wallet, onBack, onAddOwner, onChangeThreshold 
               </div>
 
               <div>
-                <p className="text-gray-400 text-sm mb-1">Threshold</p>
-                <p className="text-white text-xl">{wallet.threshold} of {wallet.owners.length}</p>
-              </div>
-
-              <div>
                 <p className="text-gray-400 text-sm mb-1">Total Transactions</p>
                 <p className="text-white text-xl">{wallet.totalTransactions}</p>
               </div>
 
               <div>
                 <p className="text-gray-400 text-sm mb-1">Created</p>
-                <p className="text-white">{new Date(wallet.createdDate).toLocaleDateString()}</p>
+                <p className="text-white">
+                  {new Date(wallet.createdDate).toLocaleDateString()}
+                </p>
               </div>
             </div>
 
             <div className="mt-6 pt-4 border-t border-white/10 space-y-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="w-full"
                 onClick={onAddOwner}
               >
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add Owner
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full"
-                onClick={onChangeThreshold}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Change Threshold
               </Button>
             </div>
           </GlassCard>
@@ -108,10 +115,6 @@ export function OwnerManagement({ wallet, onBack, onAddOwner, onChangeThreshold 
           <GlassCard className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-light text-white">Safe Owners</h2>
-              <Button variant="outline" size="sm">
-                <Shield className="h-4 w-4 mr-2" />
-                Manage Permissions
-              </Button>
             </div>
 
             <div className="space-y-4">
@@ -143,13 +146,16 @@ export function OwnerManagement({ wallet, onBack, onAddOwner, onChangeThreshold 
                           </span>
                         )}
                       </div>
-                      
+
                       <div className="flex items-center space-x-2">
                         <span className="text-gray-400 font-mono text-sm">
-                          {owner.address.slice(0, 6)}...{owner.address.slice(-4)}
+                          {owner.address.slice(0, 6)}...
+                          {owner.address.slice(-4)}
                         </span>
-                        <button 
-                          onClick={() => navigator.clipboard.writeText(owner.address)}
+                        <button
+                          onClick={() =>
+                            navigator.clipboard.writeText(owner.address)
+                          }
                           className="p-1 hover:bg-white/10 rounded-md transition-colors"
                         >
                           <Copy className="h-3 w-3 text-gray-400" />
@@ -157,9 +163,14 @@ export function OwnerManagement({ wallet, onBack, onAddOwner, onChangeThreshold 
                       </div>
 
                       <div className="flex items-center space-x-4 mt-2 text-sm text-gray-400">
-                        <span>Joined {new Date(owner.joinedDate).toLocaleDateString()}</span>
+                        <span>
+                          Joined{" "}
+                          {new Date(owner.joinedDate).toLocaleDateString()}
+                        </span>
                         <span>•</span>
-                        <span>{owner.transactionsSigned} transactions signed</span>
+                        <span>
+                          {owner.transactionsSigned} transactions signed
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -167,10 +178,6 @@ export function OwnerManagement({ wallet, onBack, onAddOwner, onChangeThreshold 
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
                     <span className="text-green-400 text-sm">Active</span>
-                    
-                    <button className="p-2 hover:bg-white/10 rounded-md transition-colors ml-4">
-                      <MoreVertical className="h-4 w-4 text-gray-400" />
-                    </button>
                   </div>
                 </div>
               ))}
@@ -181,7 +188,9 @@ export function OwnerManagement({ wallet, onBack, onAddOwner, onChangeThreshold 
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-white font-medium mb-1">Add New Owner</h3>
-                  <p className="text-gray-400 text-sm">Invite a new owner to join this Safe</p>
+                  <p className="text-gray-400 text-sm">
+                    Invite a new owner to join this Safe
+                  </p>
                 </div>
                 <Button variant="outline" onClick={onAddOwner}>
                   <UserPlus className="h-4 w-4 mr-2" />
@@ -194,15 +203,17 @@ export function OwnerManagement({ wallet, onBack, onAddOwner, onChangeThreshold 
             <div className="mt-6 pt-6 border-t border-white/10">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-white font-medium mb-1">Confirmation Threshold</h3>
+                  <h3 className="text-white font-medium mb-1">
+                    Confirmation Threshold
+                  </h3>
                   <p className="text-gray-400 text-sm">
-                    Currently requires {wallet.threshold} out of {wallet.owners.length} confirmations
+                    requires{" "}
+                    <span className="text-white font-semibold">
+                      51% of owners
+                    </span>{" "}
+                    confirmations
                   </p>
                 </div>
-                <Button variant="outline" onClick={onChangeThreshold}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Change Threshold
-                </Button>
               </div>
             </div>
           </GlassCard>
