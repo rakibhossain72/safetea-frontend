@@ -8,7 +8,7 @@ import { SafeWallet } from '../App';
 
 interface HeaderProps {
   currentPage: string;
-  selectedWallet?: SafeWallet; // Made optional since RainbowKit manages connection
+  selectedWallet?: SafeWallet | any; // Made optional since RainbowKit manages connection
   onNavigate: () => void;
   onSwitchWallet?: () => void; // Made optional
 }

@@ -4,7 +4,6 @@ import { Shield, Plus, Users, Clock, CheckCircle, Copy, ArrowRight, Search, Filt
 import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { useWalletGuard } from '../hooks/useWalletGuard';
 import { SafeWallet } from '../App';
 
 interface WalletSelectionProps {
@@ -14,19 +13,16 @@ interface WalletSelectionProps {
 
 export function WalletSelection({ wallets, onSelectWallet }: WalletSelectionProps) {
   const navigate = useNavigate();
-  const { requireWallet } = useWalletGuard();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'active' | 'inactive'>('all');
 
   const handleSelectWallet = (wallet: SafeWallet) => {
-    requireWallet(() => {
       onSelectWallet(wallet);
       navigate('/dashboard');
-    });
   };
 
   const handleCreateNew = () => {
-    requireWallet(() => navigate('/create-safe'));
+    navigate('/create-safe');
   };
 
   const filteredWallets = wallets.filter(wallet => {

@@ -5,7 +5,6 @@ import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { TokenSelector } from './ui/TokenSelector';
-import { useWalletGuard } from '../hooks/useWalletGuard';
 import { Token, TransactionData } from '../App';
 
 interface SubmitTransactionPageProps {
@@ -16,7 +15,6 @@ interface SubmitTransactionPageProps {
 
 export function SubmitTransactionPage({ tokens, onSubmit, onAddToken }: SubmitTransactionPageProps) {
   const navigate = useNavigate();
-  const { requireWallet } = useWalletGuard();
   const [transactionType, setTransactionType] = useState<'legacy' | 'token'>('legacy');
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
@@ -27,7 +25,6 @@ export function SubmitTransactionPage({ tokens, onSubmit, onAddToken }: SubmitTr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!requireWallet()) return;
     
     setIsSubmitting(true);
     
