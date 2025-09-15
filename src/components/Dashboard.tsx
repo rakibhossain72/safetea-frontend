@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAccount, useBalance } from 'wagmi';
 import { Copy, Plus, Users, Eye, Clock, CheckCircle, XCircle, ArrowRight, Coins, RefreshCw } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
@@ -15,6 +16,10 @@ export function Dashboard({
   tokens,
 }: DashboardProps) {
   const navigate = useNavigate();
+  const { address } = useAccount();
+  const { data: balance } = useBalance({
+    address: wallet?.address as `0x${string}`,
+  });
 
   const recentTransactions = [
     {
@@ -76,7 +81,8 @@ export function Dashboard({
   };
 
   const calculateTotalValue = () => {
-    const ethValue = parseFloat(wallet.ethBalance) * 2500; // Assuming ETH price
+    const ethBalance = balance ? parseFloat(balance.formatted) : parseFloat(wallet.ethBalance);
+    const ethValue = ethBalance * 2500; // Assuming ETH price
     const tokenValue = tokens.reduce((total, token) => {
       const balance = parseFloat(token.balance.replace(/,/g, ''));
       // Simplified token pricing - in real app, fetch from price API
@@ -130,7 +136,9 @@ export function Dashboard({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-gray-400 text-sm mb-1">ETH Balance</p>
-                    <p className="text-2xl font-light text-white">{wallet.ethBalance}</p>
+                    <p className="text-2xl font-light text-white">
+                      {balance ? parseFloat(balance.formatted).toFixed(4) : wallet.ethBalance}
+                    </p>
                   </div>
                   <div>
                     <p className="text-gray-400 text-sm mb-1">Total Value</p>
@@ -181,9 +189,11 @@ export function Dashboard({
                     <p className="text-gray-400 text-sm">ETH</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-medium">{wallet.ethBalance}</p>
+                    <p className="text-white font-medium">
+                      {balance ? parseFloat(balance.formatted).toFixed(4) : wallet.ethBalance}
+                    </p>
                     <p className="text-gray-400 text-sm">
-                      ${(parseFloat(wallet.ethBalance) * 2500).toLocaleString()}
+                      ${((balance ? parseFloat(balance.formatted) : parseFloat(wallet.ethBalance)) * 2500).toLocaleString()}
                     </p>
                   </div>
                 </div>
