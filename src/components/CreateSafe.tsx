@@ -7,7 +7,7 @@ import { Input } from "./ui/Input";
 import { SafeWallet } from "../App";
 
 interface CreateSafeProps {
-  onSafeCreated: (safe: Omit<SafeWallet, "id">) => void;
+  onSafeCreated: (owners: string[], safeName: string) => Promise<void>;
 }
 
 export function CreateSafe({ onSafeCreated }: CreateSafeProps) {
@@ -39,24 +39,15 @@ export function CreateSafe({ onSafeCreated }: CreateSafeProps) {
   const handleCreateSafe = async () => {
     setIsCreating(true);
 
-    // Simulate transaction creation
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    const newSafe: Omit<SafeWallet, "id"> = {
-      name: safeName || "New Safe",
-      address: `0x${Math.random().toString(16).substr(2, 40)}`,
-      owners: validOwners,
-      threshold,
-      ethBalance: "0.0000",
-      totalTransactions: 0,
-      pendingTransactions: 0,
-      createdDate: new Date().toISOString().split("T")[0],
-      isActive: true,
-    };
-
-    setIsCreating(false);
-    onSafeCreated(newSafe);
-    navigate('/dashboard');
+    try {
+      await onSafeCreated(validOwners, safeName || "New Safe");
+      navigate('/wallets');
+    } catch (error) {
+      console.error('Error creating safe:', error);
+      // Handle error (show toast, etc.)
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const validOwners = owners.filter((owner) => owner.trim() !== "");

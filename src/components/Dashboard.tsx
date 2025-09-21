@@ -1,13 +1,14 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAccount, useBalance } from 'wagmi';
+import { useBalance } from 'wagmi';
 import { Copy, Plus, Users, Eye, Clock, CheckCircle, XCircle, ArrowRight, Coins, RefreshCw } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
 import { Token, SafeWallet } from '../App';
+import { useSafeWallets } from '../hooks/useSafeWallets';
+import { TokenBalanceCard } from './TokenBalanceCard';
 
 interface DashboardProps {
-  wallet: SafeWallet;
+  wallet: SafeWallet | null;
   tokens: Token[];
 }
 
@@ -16,43 +17,30 @@ export function Dashboard({
   tokens,
 }: DashboardProps) {
   const navigate = useNavigate();
-  const { address } = useAccount();
-  const { data: balance } = useBalance({
-    address: wallet?.address as `0x${string}`,
-  });
+  
+  // If no wallet is selected, redirect to wallet selection
+  if (!wallet) {
+    navigate('/wallets');
+    return null;
+  }
 
-  const recentTransactions = [
-    {
-      id: '1',
-      to: '0x742d35Cc6834C532532c5C4b95929742c395c9f1',
-      value: '2.5 ETH',
-      status: 'pending',
-      confirmations: 2,
-      required: wallet.threshold,
-      timestamp: '2 hours ago',
-      type: 'legacy'
-    },
-    {
-      id: '2',
-      to: '0xA0b86a33E6241447b4F8A8e8F3D1f76C8C2e9C1B',
-      value: '1,000 USDC',
-      status: 'executed',
-      confirmations: wallet.threshold,
-      required: wallet.threshold,
-      timestamp: '1 day ago',
-      type: 'token'
-    },
-    {
-      id: '3',
-      to: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
-      value: '500 UNI',
-      status: 'rejected',
-      confirmations: 1,
-      required: wallet.threshold,
-      timestamp: '3 days ago',
-      type: 'token'
-    },
-  ];
+  const { data: balance } = useBalance({
+    address: wallet.address as `0x${string}`,
+  });
+  
+  const { 
+    selectedWalletTransactions, 
+    formatTransactionForDisplay,
+    refreshWalletData 
+  } = useSafeWallets();
+
+  const recentTransactions = selectedWalletTransactions
+    .slice(0, 5) // Show only 5 most recent
+    .map(formatTransactionForDisplay);
+
+  // Debug logging
+  console.log('Dashboard - selectedWalletTransactions:', selectedWalletTransactions);
+  console.log('Dashboard - recentTransactions:', recentTransactions);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -81,7 +69,7 @@ export function Dashboard({
   };
 
   const calculateTotalValue = () => {
-    const ethBalance = balance ? parseFloat(balance.formatted) : parseFloat(wallet.ethBalance);
+    const ethBalance = balance ? parseFloat(balance.value.toString()) / 1e18 : parseFloat(wallet.ethBalance);
     const ethValue = ethBalance * 2500; // Assuming ETH price
     const tokenValue = tokens.reduce((total, token) => {
       const balance = parseFloat(token.balance.replace(/,/g, ''));
@@ -103,10 +91,15 @@ export function Dashboard({
               <h1 className="text-3xl font-light text-white mb-2">{wallet.name}</h1>
               <p className="text-gray-400">Multi-signature wallet dashboard</p>
             </div>
-            <Button variant="outline" onClick={() => navigate('/wallets')}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Switch Wallet
-            </Button>
+            <div className="flex space-x-2">
+              <Button variant="outline" onClick={refreshWalletData}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/wallets')}>
+                Switch Wallet
+              </Button>
+            </div>
           </div>
           
           <GlassCard className="p-6">
@@ -137,7 +130,7 @@ export function Dashboard({
                   <div>
                     <p className="text-gray-400 text-sm mb-1">ETH Balance</p>
                     <p className="text-2xl font-light text-white">
-                      {balance ? parseFloat(balance.formatted).toFixed(4) : wallet.ethBalance}
+                      {balance ? (parseFloat(balance.value.toString()) / 1e18).toFixed(4) : wallet.ethBalance}
                     </p>
                   </div>
                   <div>
@@ -190,10 +183,10 @@ export function Dashboard({
                   </div>
                   <div className="text-right">
                     <p className="text-white font-medium">
-                      {balance ? parseFloat(balance.formatted).toFixed(4) : wallet.ethBalance}
+                      {balance ? (parseFloat(balance.value.toString()) / 1e18).toFixed(4) : wallet.ethBalance}
                     </p>
                     <p className="text-gray-400 text-sm">
-                      ${((balance ? parseFloat(balance.formatted) : parseFloat(wallet.ethBalance)) * 2500).toLocaleString()}
+                      ${((balance ? (parseFloat(balance.value.toString()) / 1e18) : parseFloat(wallet.ethBalance)) * 2500).toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -201,29 +194,11 @@ export function Dashboard({
 
               {/* Token Balances */}
               {tokens.map((token, index) => (
-                <div key={index} className="p-4 rounded-lg bg-white/5 border border-white/10">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
-                      {token.logoURI ? (
-                        <img src={token.logoURI} alt={token.symbol} className="w-8 h-8" />
-                      ) : (
-                        <span className="text-white font-bold text-xs">{token.symbol.slice(0, 3)}</span>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-white font-medium">{token.name}</p>
-                      <p className="text-gray-400 text-sm">{token.symbol}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-white font-medium">{token.balance}</p>
-                      <p className="text-gray-400 text-sm">
-                        ${(parseFloat(token.balance.replace(/,/g, '')) * 
-                          (token.symbol === 'USDC' || token.symbol === 'USDT' || token.symbol === 'DAI' ? 1 : 100)
-                        ).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <TokenBalanceCard 
+                  key={index} 
+                  token={token} 
+                  walletAddress={wallet.address} 
+                />
               ))}
             </div>
           </GlassCard>
@@ -264,45 +239,48 @@ export function Dashboard({
           </div>
 
           <div className="space-y-4">
-            {recentTransactions.map((tx) => (
-              <div
-                key={tx.id}
-                onClick={() => navigate(`/transaction/${tx.id}`)}
-                className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <div className="flex items-center space-x-4">
-                  {getStatusIcon(tx.status)}
-                  <div>
-                    <div className="flex items-center space-x-2 mb-1">
-                      <p className="text-white font-medium">Send {tx.value}</p>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        tx.type === 'legacy' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'
-                      }`}>
-                        {tx.type === 'legacy' ? 'ETH' : 'Token'}
-                      </span>
+            {recentTransactions.length > 0 ? (
+              recentTransactions.map((tx) => (
+                <div
+                  key={tx.id}
+                  onClick={() => navigate(`/transaction/${tx.id}`)}
+                  className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center space-x-4">
+                    {getStatusIcon(tx.status)}
+                    <div>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <p className="text-white font-medium">Send {tx.value}</p>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          tx.type === 'legacy' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'
+                        }`}>
+                          {tx.type === 'legacy' ? 'ETH' : 'Token'}
+                        </span>
+                      </div>
+                      <p className="text-gray-400 text-sm font-mono">
+                        To: {tx.to.slice(0, 6)}...{tx.to.slice(-4)}
+                      </p>
                     </div>
-                    <p className="text-gray-400 text-sm font-mono">
-                      To: {tx.to.slice(0, 6)}...{tx.to.slice(-4)}
-                    </p>
                   </div>
-                </div>
 
-                <div className="text-right">
-                  <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(tx.status)}`}>
-                    {tx.status === 'pending' ? `${tx.confirmations}/${tx.required}` : tx.status}
+                  <div className="text-right">
+                    <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(tx.status)}`}>
+                      {tx.status === 'pending' ? `${tx.confirmations}/${tx.required}` : tx.status}
+                    </div>
+                    <p className="text-gray-400 text-sm mt-1">{tx.timestamp}</p>
                   </div>
-                  <p className="text-gray-400 text-sm mt-1">{tx.timestamp}</p>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <Eye className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400">No transactions yet</p>
+                <p className="text-gray-500 text-sm mt-2">
+                  Submit your first transaction to get started
+                </p>
               </div>
-            ))}
+            )}
           </div>
-
-          {recentTransactions.length === 0 && (
-            <div className="text-center py-12">
-              <Eye className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">No transactions yet</p>
-            </div>
-          )}
         </GlassCard>
       </div>
     </>

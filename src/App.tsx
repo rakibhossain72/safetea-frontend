@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAccount } from "wagmi";
 import { Header } from "./components/Header";
@@ -13,6 +13,8 @@ import { SubmitTransactionPage } from "./components/SubmitTransactionPage";
 import { AddOwnerPage } from "./components/AddOwnerPage";
 import { ImportTokenPage } from "./components/ImportTokenPage";
 import { ConfirmTransactionPage } from "./components/ConfirmTransactionPage";
+import { useSafeWallets } from "./hooks/useSafeWallets";
+import { useContracts } from "./hooks/useContracts";
 
 export interface Token {
   address: string;
@@ -46,60 +48,17 @@ export interface SafeWallet {
 
 function App() {
   const { isConnected } = useAccount();
+  const { createWallet } = useContracts();
+  const { 
+    wallets, 
+    selectedWallet, 
+    handleWalletSelect, 
+    refreshWalletData,
+    isLoading 
+  } = useSafeWallets();
+  
   const [pendingTransaction, setPendingTransaction] =
     useState<TransactionData | null>(null);
-  const [selectedWallet, setSelectedWallet] = useState<SafeWallet | null>(null);
-
-  const [wallets, setWallets] = useState<SafeWallet[]>([
-    {
-      id: "1",
-      name: "Team Treasury",
-      address: "0x8ba1f109551bD432803012645Hac136c82067433",
-      owners: [
-        "0x8ba1f109551bD432803012645Hac136c82067433",
-        "0x742d35Cc6834C532532c5C4b95929742c395c9f1",
-        "0xA0b86a33E6241447b4F8A8e8F3D1f76C8C2e9C1B",
-      ],
-      threshold: 3,
-      ethBalance: "12.4567",
-      totalTransactions: 127,
-      pendingTransactions: 3,
-      createdDate: "2024-01-01",
-      isActive: true,
-    },
-    {
-      id: "2",
-      name: "Marketing Fund",
-      address: "0x742d35Cc6834C532532c5C4b95929742c395c9f1",
-      owners: [
-        "0x8ba1f109551bD432803012645Hac136c82067433",
-        "0x742d35Cc6834C532532c5C4b95929742c395c9f1",
-      ],
-      threshold: 2,
-      ethBalance: "8.2341",
-      totalTransactions: 45,
-      pendingTransactions: 1,
-      createdDate: "2024-01-15",
-      isActive: false,
-    },
-    {
-      id: "3",
-      name: "Development Pool",
-      address: "0xA0b86a33E6241447b4F8A8e8F3D1f76C8C2e9C1B",
-      owners: [
-        "0x8ba1f109551bD432803012645Hac136c82067433",
-        "0x742d35Cc6834C532532c5C4b95929742c395c9f1",
-        "0xA0b86a33E6241447b4F8A8e8F3D1f76C8C2e9C1B",
-        "0x1234567890123456789012345678901234567890",
-      ],
-      threshold: 2,
-      ethBalance: "25.7890",
-      totalTransactions: 89,
-      pendingTransactions: 0,
-      createdDate: "2023-12-10",
-      isActive: false,
-    },
-  ]);
 
   const [tokens, setTokens] = useState<Token[]>([
     {
@@ -107,38 +66,38 @@ function App() {
       symbol: "USDC",
       name: "USD Coin",
       decimals: 6,
-      balance: "1,234.56",
-      logoURI: "https://cryptologos.cc/logos/usd-coin-usdc-logo.png",
+      balance: "0.00", // This will be updated by TokenBalanceCard
+      logoURI: "https://upload.wikimedia.org/wikipedia/commons/4/49/USDC_Logo.png",
     },
     {
       address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
       symbol: "USDT",
       name: "Tether USD",
       decimals: 6,
-      balance: "2,345.67",
-      logoURI: "https://cryptologos.cc/logos/tether-usdt-logo.png",
+      balance: "0.00", // This will be updated by TokenBalanceCard
+      logoURI: "https://upload.wikimedia.org/wikipedia/commons/0/01/USDT_Logo.png",
     },
     {
       address: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
       symbol: "DAI",
       name: "Dai Stablecoin",
       decimals: 18,
-      balance: "3,456.78",
-      logoURI: "https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.png",
+      balance: "0.00", // This will be updated by TokenBalanceCard
+      logoURI: "https://images.seeklogo.com/logo-png/39/1/dai-dai-logo-png_seeklogo-398219.png",
     },
   ]);
 
-  const handleWalletSelect = (wallet: SafeWallet) => {
-    setSelectedWallet(wallet);
-    setWallets((prev) =>
-      prev.map((w) => ({ ...w, isActive: w.id === wallet.id }))
-    );
-  };
-
-  const handleSafeCreated = (newSafe: Omit<SafeWallet, "id">) => {
-    const safe: SafeWallet = { ...newSafe, id: Date.now().toString() };
-    setWallets((prev) => [...prev, safe]);
-    setSelectedWallet(safe);
+  const handleSafeCreated = async (owners: string[], _safeName: string) => {
+    try {
+      await createWallet(owners);
+      // Refresh wallet data after creation
+      setTimeout(() => {
+        refreshWalletData();
+      }, 2000); // Wait for blockchain confirmation
+    } catch (error) {
+      console.error('Error creating safe:', error);
+      throw error;
+    }
   };
 
   const handleSubmitTransaction = (transactionData: TransactionData) => {
@@ -147,6 +106,7 @@ function App() {
 
   const handleConfirmTransaction = () => {
     setPendingTransaction(null);
+    refreshWalletData(); // Refresh data after transaction
   };
 
   const handleAddToken = (token: Token) => {
@@ -179,6 +139,7 @@ function App() {
               <WalletSelection
                 wallets={wallets}
                 onSelectWallet={handleWalletSelect}
+                isLoading={isLoading}
               />
             }
           />
@@ -192,18 +153,29 @@ function App() {
           {/* Dashboard */}
           <Route
             path="/dashboard"
-            element={<Dashboard wallet={selectedWallet!} tokens={tokens} />}
+            element={
+              selectedWallet ? (
+                <Dashboard wallet={selectedWallet} tokens={tokens} />
+              ) : (
+                <Navigate to="/wallets" replace />
+              )
+            }
           />
 
           {/* Submit Transaction */}
           <Route
             path="/submit-transaction"
             element={
-              <SubmitTransactionPage
-                tokens={tokens}
-                onSubmit={handleSubmitTransaction}
-                onAddToken={handleAddToken}
-              />
+              selectedWallet ? (
+                <SubmitTransactionPage
+                  wallet={selectedWallet}
+                  tokens={tokens}
+                  onSubmit={handleSubmitTransaction}
+                  onAddToken={handleAddToken}
+                />
+              ) : (
+                <Navigate to="/wallets" replace />
+              )
             }
           />
 
@@ -231,13 +203,25 @@ function App() {
           {/* Owner Management */}
           <Route
             path="/owners"
-            element={<OwnerManagement wallet={selectedWallet!} />}
+            element={
+              selectedWallet ? (
+                <OwnerManagement wallet={selectedWallet} />
+              ) : (
+                <Navigate to="/wallets" replace />
+              )
+            }
           />
 
           {/* Add Owner */}
           <Route
             path="/add-owner"
-            element={<AddOwnerPage wallet={selectedWallet!} />}
+            element={
+              selectedWallet ? (
+                <AddOwnerPage wallet={selectedWallet} />
+              ) : (
+                <Navigate to="/wallets" replace />
+              )
+            }
           />
 
           {/* Import Token */}

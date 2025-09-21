@@ -9,14 +9,16 @@ import { SafeWallet } from '../App';
 interface WalletSelectionProps {
   wallets: SafeWallet[];
   onSelectWallet: (wallet: SafeWallet) => void;
+  isLoading?: boolean;
 }
 
-export function WalletSelection({ wallets, onSelectWallet }: WalletSelectionProps) {
+export function WalletSelection({ wallets, onSelectWallet, isLoading = false }: WalletSelectionProps) {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'active' | 'inactive'>('all');
 
   const handleSelectWallet = (wallet: SafeWallet) => {
+      console.log('Selecting wallet:', wallet);
       onSelectWallet(wallet);
       navigate('/dashboard');
   };
@@ -126,9 +128,18 @@ export function WalletSelection({ wallets, onSelectWallet }: WalletSelectionProp
           </GlassCard>
         </div>
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4" />
+            <p className="text-gray-400 text-lg">Loading your wallets...</p>
+          </div>
+        )}
+
         {/* Wallets Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredWallets.map((wallet) => (
+        {!isLoading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredWallets.map((wallet) => (
             <GlassCard
               key={wallet.id}
               className="p-6 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group"
@@ -252,10 +263,11 @@ export function WalletSelection({ wallets, onSelectWallet }: WalletSelectionProp
               </Button>
             </div>
           </GlassCard>
-        </div>
+          </div>
+        )}
 
         {/* Empty State */}
-        {filteredWallets.length === 0 && wallets.length > 0 && (
+        {!isLoading && filteredWallets.length === 0 && wallets.length > 0 && (
           <div className="text-center py-12">
             <Search className="h-12 w-12 text-gray-600 mx-auto mb-4" />
             <p className="text-gray-400 text-lg">No wallets found</p>

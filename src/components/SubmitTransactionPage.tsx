@@ -1,51 +1,151 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useBalance, usePublicClient } from 'wagmi';
 import { ArrowLeft, Send, Coins, ArrowRight } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { TokenSelector } from './ui/TokenSelector';
-import { Token, TransactionData } from '../App';
+import { Token, TransactionData, SafeWallet } from '../App';
+import { useContracts } from '../hooks/useContracts';
+import { useTokenBalance } from '../hooks/useTokenBalance';
+import { parseEther, formatEther } from 'viem';
 
 interface SubmitTransactionPageProps {
+  wallet: SafeWallet;
   tokens: Token[];
   onSubmit: (transaction: TransactionData) => void;
   onAddToken: (token: Token) => void;
 }
 
-export function SubmitTransactionPage({ tokens, onSubmit, onAddToken }: SubmitTransactionPageProps) {
+export function SubmitTransactionPage({ wallet, tokens, onSubmit, onAddToken }: SubmitTransactionPageProps) {
   const navigate = useNavigate();
+  const { submitTransaction } = useContracts();
+  const publicClient = usePublicClient();
+  
   const [transactionType, setTransactionType] = useState<'legacy' | 'token'>('legacy');
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
   const [selectedToken, setSelectedToken] = useState<Token | null>(null);
   const [customData, setCustomData] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [gasEstimate, setGasEstimate] = useState<string>('0.002');
+
+  // Get wallet balance
+  const { data: balance } = useBalance({
+    address: wallet?.address as `0x${string}`,
+  });
+
+  // Get token balance for selected token
+  const { balance: tokenBalance } = useTokenBalance(
+    selectedToken?.address || '',
+    wallet?.address || '',
+    selectedToken?.decimals || 18
+  );
+
+  // Estimate gas when transaction details change
+  useEffect(() => {
+    const estimateGas = async () => {
+      if (!publicClient || !recipient || !amount || !wallet) return;
+      
+      try {
+        let gasEstimate: bigint;
+        
+        if (transactionType === 'legacy') {
+          // Estimate gas for ETH transfer
+          gasEstimate = await publicClient.estimateGas({
+            account: wallet.address as `0x${string}`,
+            to: recipient as `0x${string}`,
+            value: parseEther(amount),
+            data: (customData || '0x') as `0x${string}`,
+          });
+        } else if (selectedToken) {
+          // Estimate gas for token transfer
+          const tokenTransferData = `0xa9059cbb${recipient.slice(2).padStart(64, '0')}${Math.floor(parseFloat(amount) * Math.pow(10, selectedToken.decimals)).toString(16).padStart(64, '0')}`;
+          gasEstimate = await publicClient.estimateGas({
+            account: wallet.address as `0x${string}`,
+            to: selectedToken.address as `0x${string}`,
+            data: tokenTransferData as `0x${string}`,
+          });
+        } else {
+          return;
+        }
+
+        // Get current gas price
+        const gasPrice = await publicClient.getGasPrice();
+        const totalGasCost = gasEstimate * gasPrice;
+        setGasEstimate(formatEther(totalGasCost));
+      } catch (error) {
+        console.error('Error estimating gas:', error);
+        // Fallback to default estimates
+        setGasEstimate(transactionType === 'legacy' ? '0.002' : '0.005');
+      }
+    };
+
+    if (recipient && amount) {
+      estimateGas();
+    }
+  }, [recipient, amount, transactionType, selectedToken, customData, publicClient, wallet]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!wallet) {
+      console.error('No wallet selected');
+      alert('No wallet selected. Please select a wallet first.');
+      return;
+    }
     
+    console.log('Submitting transaction with wallet:', wallet.address);
     setIsSubmitting(true);
     
-    // Simulate validation
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const transactionData: TransactionData = {
-      type: transactionType,
-      to: recipient,
-      value: amount,
-      token: transactionType === 'token' ? selectedToken || undefined : undefined,
-      data: customData || undefined
-    };
-
-    setIsSubmitting(false);
-    onSubmit(transactionData);
-    navigate('/confirm-transaction');
+    try {
+      if (transactionType === 'legacy') {
+        // Submit ETH transaction
+        console.log('Submitting ETH transaction:', { to: recipient, amount, data: customData || '0x' });
+        await submitTransaction(
+          wallet.address,
+          recipient,
+          amount,
+          customData || '0x'
+        );
+      } else {
+        // For token transactions, we need to encode the transfer call
+        const tokenTransferData = `0xa9059cbb${recipient.slice(2).padStart(64, '0')}${Math.floor(parseFloat(amount) * Math.pow(10, selectedToken?.decimals || 18)).toString(16).padStart(64, '0')}`;
+        console.log('Submitting token transaction:', { token: selectedToken?.address, to: recipient, amount, data: tokenTransferData });
+        await submitTransaction(
+          wallet.address,
+          selectedToken?.address || '',
+          '0', // No ETH value for token transfers
+          tokenTransferData
+        );
+      }
+      
+      console.log('Transaction submitted successfully');
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error submitting transaction:', error);
+      alert(`Error submitting transaction: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const ethBalance = '12.4567';
-  const selectedBalance = transactionType === 'legacy' ? ethBalance : selectedToken?.balance || '0';
+  // Get current balance
+  const ethBalance = balance ? (parseFloat(balance.value.toString()) / 1e18).toFixed(4) : wallet?.ethBalance || '0';
+  const selectedBalance = transactionType === 'legacy' ? ethBalance : tokenBalance || '0';
+
+  // Handle max button click
+  const handleMaxClick = () => {
+    if (transactionType === 'legacy') {
+      // For ETH, subtract estimated gas cost
+      const maxAmount = Math.max(0, parseFloat(ethBalance) - parseFloat(gasEstimate));
+      setAmount(maxAmount.toString());
+    } else {
+      // For tokens, use full balance
+      setAmount(selectedBalance.replace(/,/g, ''));
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -153,10 +253,10 @@ export function SubmitTransactionPage({ tokens, onSubmit, onAddToken }: SubmitTr
                   </label>
                   <button
                     type="button"
-                    onClick={() => setAmount(selectedBalance.replace(/,/g, ''))}
+                    onClick={handleMaxClick}
                     className="text-sm text-purple-400 hover:text-purple-300 transition-colors"
                   >
-                    Max: {selectedBalance}
+                    Max: {parseFloat(selectedBalance).toFixed(4)} {transactionType === 'legacy' ? 'ETH' : selectedToken?.symbol || 'TOKEN'}
                   </button>
                 </div>
                 <div className="relative">
@@ -238,7 +338,7 @@ export function SubmitTransactionPage({ tokens, onSubmit, onAddToken }: SubmitTr
               <div>
                 <p className="text-gray-400 text-sm mb-1">Est. Gas</p>
                 <p className="text-white">
-                  ~{transactionType === 'legacy' ? '0.002' : '0.005'} ETH
+                  ~{parseFloat(gasEstimate).toFixed(6)} ETH
                 </p>
               </div>
 

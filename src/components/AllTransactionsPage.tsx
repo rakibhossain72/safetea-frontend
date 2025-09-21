@@ -4,80 +4,16 @@ import { ArrowLeft, Clock, CheckCircle, XCircle, Filter, Search, Eye } from 'luc
 import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { useSafeWallets } from '../hooks/useSafeWallets';
 
 export function AllTransactionsPage() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  
+  const { selectedWalletTransactions, formatTransactionForDisplay, selectedWallet } = useSafeWallets();
 
-  const allTransactions = [
-    {
-      id: '1',
-      to: '0x742d35Cc6834C532532c5C4b95929742c395c9f1',
-      value: '2.5 ETH',
-      status: 'pending',
-      confirmations: 2,
-      required: 3,
-      timestamp: '2024-01-15T10:30:00Z',
-      type: 'send',
-      submittedBy: '0x8ba1f109551bD432803012645Hac136c82067433'
-    },
-    {
-      id: '2',
-      to: '0xA0b86a33E6241447b4F8A8e8F3D1f76C8C2e9C1B',
-      value: '1,000 USDC',
-      status: 'executed',
-      confirmations: 3,
-      required: 3,
-      timestamp: '2024-01-14T15:45:00Z',
-      type: 'send',
-      submittedBy: '0x742d35Cc6834C532532c5C4b95929742c395c9f1'
-    },
-    {
-      id: '3',
-      to: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
-      value: '500 UNI',
-      status: 'rejected',
-      confirmations: 1,
-      required: 3,
-      timestamp: '2024-01-13T09:20:00Z',
-      type: 'send',
-      submittedBy: '0xA0b86a33E6241447b4F8A8e8F3D1f76C8C2e9C1B'
-    },
-    {
-      id: '4',
-      to: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
-      value: '2,500 DAI',
-      status: 'executed',
-      confirmations: 3,
-      required: 3,
-      timestamp: '2024-01-12T14:10:00Z',
-      type: 'send',
-      submittedBy: '0x8ba1f109551bD432803012645Hac136c82067433'
-    },
-    {
-      id: '5',
-      to: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-      value: '1,500 USDT',
-      status: 'executed',
-      confirmations: 3,
-      required: 3,
-      timestamp: '2024-01-11T11:30:00Z',
-      type: 'send',
-      submittedBy: '0x742d35Cc6834C532532c5C4b95929742c395c9f1'
-    },
-    {
-      id: '6',
-      to: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
-      value: '100 LINK',
-      status: 'pending',
-      confirmations: 1,
-      required: 3,
-      timestamp: '2024-01-10T16:45:00Z',
-      type: 'send',
-      submittedBy: '0xA0b86a33E6241447b4F8A8e8F3D1f76C8C2e9C1B'
-    }
-  ];
+  const allTransactions = selectedWalletTransactions.map(formatTransactionForDisplay);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
