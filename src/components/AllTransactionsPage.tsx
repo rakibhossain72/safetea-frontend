@@ -4,14 +4,14 @@ import { ArrowLeft, Clock, CheckCircle, XCircle, Filter, Search, Eye } from 'luc
 import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { useSafeWallets } from '../hooks/useSafeWallets';
+import { useSafeWalletsContext } from '../contexts/SafeWalletsContext';
 
 export function AllTransactionsPage() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   
-  const { selectedWalletTransactions, formatTransactionForDisplay, selectedWallet } = useSafeWallets();
+  const { selectedWalletTransactions, formatTransactionForDisplay, selectedWallet } = useSafeWalletsContext();
 
   const allTransactions = selectedWalletTransactions.map(formatTransactionForDisplay);
 

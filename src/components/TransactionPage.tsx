@@ -14,7 +14,7 @@ import { Button } from "./ui/Button";
 import { TransactionModal } from "./ui/TransactionModal";
 import { useTransactionModal } from "../hooks/useTransactionModal";
 import { useContracts } from "../hooks/useContracts";
-import { useSafeWallets } from "../hooks/useSafeWallets";
+import { useSafeWalletsContext } from "../contexts/SafeWalletsContext";
 
 export function TransactionPage() {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ export function TransactionPage() {
     selectedWallet,
     selectedWalletTransactions,
     refreshWalletData,
-  } = useSafeWallets();
+  } = useSafeWalletsContext();
   const { modalState, openModal, closeModal } = useTransactionModal();
 
   const [ownerConfirmations, setOwnerConfirmations] = useState<

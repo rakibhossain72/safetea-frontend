@@ -13,7 +13,7 @@ import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { Token } from "../App";
 import { useContracts } from "../hooks/useContracts";
-import { useSafeWallets } from "../hooks/useSafeWallets";
+import { useSafeWalletsContext } from "../contexts/SafeWalletsContext";
 
 interface ImportTokenPageProps {
   onImport: (token: Token) => void;
@@ -22,7 +22,7 @@ interface ImportTokenPageProps {
 export function ImportTokenPage({ onImport }: ImportTokenPageProps) {
   const navigate = useNavigate();
   const { getTokenInfo } = useContracts();
-  const { selectedWallet } = useSafeWallets();
+  const { selectedWallet } = useSafeWalletsContext();
 
   const [contractAddress, setContractAddress] = useState("");
   const [isLoading, setIsLoading] = useState(false);

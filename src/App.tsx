@@ -14,7 +14,7 @@ import { SubmitTransactionPage } from "./components/SubmitTransactionPage";
 import { AddOwnerPage } from "./components/AddOwnerPage";
 import { ImportTokenPage } from "./components/ImportTokenPage";
 import { ConfirmTransactionPage } from "./components/ConfirmTransactionPage";
-import { useSafeWallets } from "./hooks/useSafeWallets";
+import { SafeWalletsProvider, useSafeWalletsContext } from "./contexts/SafeWalletsContext";
 import { useContracts } from "./hooks/useContracts";
 
 export interface Token {
@@ -63,7 +63,7 @@ function AppRoutes() {
     handleWalletSelect,
     refreshWalletData,
     isLoading,
-  } = useSafeWallets();
+  } = useSafeWalletsContext();
 
   const [pendingTransaction, setPendingTransaction] =
     useState<TransactionData | null>(null);
@@ -273,7 +273,11 @@ function AppRoutes() {
 }
 
 function App() {
-  return <AppRoutes />;
+  return (
+    <SafeWalletsProvider>
+      <AppRoutes />
+    </SafeWalletsProvider>
+  );
 }
 
 export default App;

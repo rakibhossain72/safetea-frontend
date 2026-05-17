@@ -5,8 +5,23 @@ import { Copy, Plus, Users, Eye, Clock, CheckCircle, XCircle, ArrowRight, Coins,
 import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
 import { Token, SafeWallet } from '../App';
-import { useSafeWallets } from '../hooks/useSafeWallets';
+import { useSafeWalletsContext } from '../contexts/SafeWalletsContext';
 import { TokenBalanceCard } from './TokenBalanceCard';
+
+// Inline ETH diamond logo
+function EthLogo({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="16" cy="16" r="16" fill="#627EEA"/>
+      <path d="M16.498 4v8.87l7.497 3.35L16.498 4z" fill="white" fillOpacity="0.6"/>
+      <path d="M16.498 4L9 16.22l7.498-3.35V4z" fill="white"/>
+      <path d="M16.498 21.968v6.027L24 17.616l-7.502 4.352z" fill="white" fillOpacity="0.6"/>
+      <path d="M16.498 27.995v-6.028L9 17.616l7.498 10.379z" fill="white"/>
+      <path d="M16.498 20.573l7.497-4.353-7.497-3.348v7.701z" fill="white" fillOpacity="0.2"/>
+      <path d="M9 16.22l7.498 4.353v-7.701L9 16.22z" fill="white" fillOpacity="0.6"/>
+    </svg>
+  );
+}
 
 interface DashboardProps {
   wallet: SafeWallet | null;
@@ -34,28 +49,15 @@ export function Dashboard({
     formatTransactionForDisplay,
     refreshWalletData,
     isTransactionsLoading
-  } = useSafeWallets();
+  } = useSafeWalletsContext();
 
-  console.log("Selected Wallet Transactions", selectedWalletTransactions);
-
-  // Wait for transactions to load and format them
+  // Format transactions for display
   const recentTransactions = React.useMemo(() => {
-    if (!selectedWalletTransactions || isTransactionsLoading) {
-      return [];
-    }
-    
-    console.log('Formatting transactions:', selectedWalletTransactions);
+    if (!selectedWalletTransactions?.length) return [];
     return selectedWalletTransactions
-      .slice(0, 5) // Show only 5 most recent
+      .slice(0, 5)
       .map(formatTransactionForDisplay);
-  }, [selectedWalletTransactions, formatTransactionForDisplay, isTransactionsLoading]);
-
-  console.log('Dashboard render:', {
-    wallet: wallet?.address,
-    selectedWalletTransactions: selectedWalletTransactions.length,
-    recentTransactions: recentTransactions.length,
-    isTransactionsLoading
-  });
+  }, [selectedWalletTransactions, formatTransactionForDisplay]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -187,9 +189,7 @@ export function Dashboard({
               {/* ETH Balance */}
               <div className="p-4 rounded-lg bg-white/5 border border-white/10">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">ETH</span>
-                  </div>
+                  <EthLogo className="w-10 h-10 flex-shrink-0" />
                   <div className="flex-1">
                     <p className="text-white font-medium">Ethereum</p>
                     <p className="text-gray-400 text-sm">ETH</p>
@@ -269,10 +269,10 @@ export function Dashboard({
                     <div>
                       <div className="flex items-center space-x-2 mb-1">
                         <p className="text-white font-medium">Send {tx.value}</p>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
+                        <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
                           tx.type === 'legacy' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'
                         }`}>
-                          {tx.type === 'legacy' ? 'ETH' : 'Token'}
+                          {tx.type === 'legacy' ? <><EthLogo className="w-3 h-3" /> ETH</> : 'Token'}
                         </span>
                       </div>
                       <p className="text-gray-400 text-sm font-mono">
