@@ -13,6 +13,21 @@ import { Token, SafeWallet } from "../App";
 import { useContracts } from "../hooks/useContracts";
 import { useTokenBalance } from "../hooks/useTokenBalance";
 
+// Inline ETH logo SVG
+function EthLogo({ size = 48 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="16" cy="16" r="16" fill="#627EEA" />
+      <path d="M16.498 4v8.87l7.497 3.35L16.498 4z" fill="white" fillOpacity="0.6" />
+      <path d="M16.498 4L9 16.22l7.498-3.35V4z" fill="white" />
+      <path d="M16.498 21.968v6.027L24 17.616l-7.502 4.352z" fill="white" fillOpacity="0.6" />
+      <path d="M16.498 27.995v-6.028L9 17.616l7.498 10.379z" fill="white" />
+      <path d="M16.498 20.573l7.497-4.353-7.497-3.348v7.701z" fill="white" fillOpacity="0.2" />
+      <path d="M9 16.22l7.498 4.353v-7.7L9 16.22z" fill="white" fillOpacity="0.6" />
+    </svg>
+  );
+}
+
 interface SubmitTransactionPageProps {
   wallet: SafeWallet;
   tokens: Token[];
@@ -190,8 +205,8 @@ export function SubmitTransactionPage({
                     }`}
                   >
                     <div className="text-center">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center mx-auto mb-3">
-                        <span className="text-white font-bold font-display">ETH</span>
+                      <div className="flex justify-center mb-3">
+                        <EthLogo size={48} />
                       </div>
                       <p className="font-display font-medium text-lg mb-1">
                         ETH Transfer
@@ -247,6 +262,7 @@ export function SubmitTransactionPage({
                     selectedToken={selectedToken}
                     onSelectToken={setSelectedToken}
                     onAddToken={onAddToken}
+                    walletAddress={wallet.address}
                     placeholder="Choose a token to send"
                   />
                 </div>
